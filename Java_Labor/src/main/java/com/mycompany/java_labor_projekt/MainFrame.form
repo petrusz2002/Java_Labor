@@ -35,11 +35,7 @@
                               <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
                               <Component id="bttn_find" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Group type="102" attributes="0">
-                              <Component id="bttn_import" min="-2" pref="239" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="bttn_show" max="32767" attributes="0"/>
-                          </Group>
+                          <Component id="bttn_import" min="-2" pref="239" max="-2" attributes="0"/>
                           <Component id="bttn_export" alignment="0" min="-2" pref="239" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace pref="37" max="32767" attributes="0"/>
@@ -72,10 +68,7 @@
                           <Component id="bttn_find" alignment="3" min="-2" pref="22" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="bttn_show" alignment="0" min="-2" pref="58" max="-2" attributes="0"/>
-                          <Component id="bttn_import" min="-2" pref="58" max="-2" attributes="0"/>
-                      </Group>
+                      <Component id="bttn_import" min="-2" pref="58" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="bttn_export" min="-2" pref="58" max="-2" attributes="0"/>
                   </Group>
@@ -96,6 +89,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Find"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bttn_findActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="bttn_save">
       <Properties>
@@ -144,7 +140,7 @@
             </Property>
             <Property name="columnSelectionAllowed" type="boolean" value="true"/>
             <Property name="tableHeader" type="javax.swing.table.JTableHeader" editor="org.netbeans.modules.form.editors2.JTableHeaderEditor">
-              <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
+              <TableHeader reorderingAllowed="false" resizingAllowed="true"/>
             </Property>
           </Properties>
         </Component>
@@ -164,14 +160,6 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bttn_exportActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="bttn_show">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Show database"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bttn_showActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

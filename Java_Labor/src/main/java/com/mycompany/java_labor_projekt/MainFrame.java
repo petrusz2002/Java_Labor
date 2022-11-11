@@ -8,16 +8,16 @@ package com.mycompany.java_labor_projekt;
 import com.opencsv.*;
 import java.awt.*;
 import java.io.*;
-import java.net.*;
-import java.nio.file.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.swing.table.DefaultTableModel;
 
-/**
- *
- * @author Gep
- */
+
 public class MainFrame extends javax.swing.JFrame {
 
     /**
@@ -46,7 +46,6 @@ public class MainFrame extends javax.swing.JFrame {
         table = new javax.swing.JTable();
         bttn_import = new javax.swing.JButton();
         bttn_export = new javax.swing.JButton();
-        bttn_show = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Java_Labor_Projekt");
@@ -55,6 +54,11 @@ public class MainFrame extends javax.swing.JFrame {
         txt_input.setName(""); // NOI18N
 
         bttn_find.setText("Find");
+        bttn_find.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttn_findActionPerformed(evt);
+            }
+        });
 
         bttn_save.setText("Save");
         bttn_save.addActionListener(new java.awt.event.ActionListener() {
@@ -87,6 +91,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         table.setColumnSelectionAllowed(true);
+        table.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(table);
         table.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
 
@@ -104,13 +109,6 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
-        bttn_show.setText("Show database");
-        bttn_show.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bttn_showActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -125,10 +123,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 .addComponent(txt_input, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(1, 1, 1)
                                 .addComponent(bttn_find))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(bttn_show, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(bttn_export, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 37, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -153,9 +148,7 @@ public class MainFrame extends javax.swing.JFrame {
                             .addComponent(txt_input, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(bttn_find, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(bttn_show, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bttn_export, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(30, Short.MAX_VALUE))
@@ -165,25 +158,33 @@ public class MainFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bttn_saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_saveActionPerformed
-        table.setValueAt("asdasdasdasd", 0, 0);
+        //Az adott cellában állva tud adatot módosítani/hozzáadni a táblába
         
+        table.setValueAt(table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()), table.getSelectedRow(), table.getSelectedColumn());
     }//GEN-LAST:event_bttn_saveActionPerformed
 
     private void bttn_deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_deleteActionPerformed
-        table.setValueAt("", 0, 0);
+        //Az adott cellában állva tud adatot törölni a táblából
+        
+        table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
     }//GEN-LAST:event_bttn_deleteActionPerformed
 
     private void bttn_importActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_importActionPerformed
+        // Egy két oszlopos és akár végtelen soros csv fájból beimportálja a táblába az adatokat
+        
         Frame f = new Frame();
         FileDialog openf = new FileDialog(f, "Choose a file");
         openf.setVisible(true);
+        String[] s;
+        String[] nextRecord;
+        DefaultTableModel dt = (DefaultTableModel) table.getModel();
          try {
             FileReader fr = new FileReader(openf.getDirectory()+"/"+openf.getFile());
             CSVReader csvReader = new CSVReader(fr);
-            String[] nextRecord;
             while ((nextRecord = csvReader.readNext()) != null) {
                 for (String cell : nextRecord) {
-                    l.add(cell);
+                    s = cell.split(";");
+                    dt.addRow(s); 
                 }
             }
         }
@@ -193,12 +194,60 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_bttn_importActionPerformed
 
     private void bttn_exportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_exportActionPerformed
-        // TODO add your handling code here:
+        //Ez egy basic export az sql-ból át kell még alakítani a sajátunkra
+        String jdbcURL = "jdbc:mysql://localhost:3306/sales";
+        String username = "root";
+        String password = "password";
+         
+        String csvFilePath = "Export.csv";
+         
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            String sql = "SELECT * FROM review";
+             
+            Statement statement = connection.createStatement();
+             
+            ResultSet result = statement.executeQuery(sql);
+             
+            BufferedWriter fileWriter = new BufferedWriter(new FileWriter(csvFilePath));
+             
+            // write header line containing column names       
+            fileWriter.write("course_name,student_name,timestamp,rating,comment");
+             
+            while (result.next()) {
+                String courseName = result.getString("course_name");
+                String studentName = result.getString("student_name");
+                float rating = result.getFloat("rating");
+                Timestamp timestamp = result.getTimestamp("timestamp");
+                String comment = result.getString("comment");
+                 
+                if (comment == null) {
+                    comment = "";   // write empty value for null
+                } else {
+                    comment = "\"" + comment + "\""; // escape double quotes
+                }
+                 
+                String line = String.format("\"%s\",%s,%.1f,%s,%s",
+                        courseName, studentName, rating, timestamp, comment);
+                 
+                fileWriter.newLine();
+                fileWriter.write(line);            
+            }
+             
+            statement.close();
+            fileWriter.close();
+             
+        } catch (SQLException e) {
+            System.out.println("Datababse error:");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("File IO error:");
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_bttn_exportActionPerformed
 
-    private void bttn_showActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_showActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_bttn_showActionPerformed
+    private void bttn_findActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_findActionPerformed
+        //Keresés a táblában a bekért szöveg alapján
+    }//GEN-LAST:event_bttn_findActionPerformed
 
     /**
      * @param args the command line arguments
@@ -241,7 +290,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton bttn_find;
     private javax.swing.JButton bttn_import;
     private javax.swing.JButton bttn_save;
-    private javax.swing.JButton bttn_show;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable table;
     private javax.swing.JTextField txt_input;

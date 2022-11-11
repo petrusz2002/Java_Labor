@@ -76,7 +76,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null}
+
             },
             new String [] {
                 "elso", "masodik"
@@ -179,8 +179,8 @@ public class MainFrame extends javax.swing.JFrame {
         String[] nextRecord;
         DefaultTableModel dt = (DefaultTableModel) table.getModel();
          try {
-            FileReader fr = new FileReader(openf.getDirectory()+"/"+openf.getFile());
-            CSVReader csvReader = new CSVReader(fr);
+            InputStream fr = new FileInputStream(openf.getDirectory()+"/"+openf.getFile());
+            CSVReader csvReader = new CSVReader(new InputStreamReader(fr, "Windows-1250"));
             while ((nextRecord = csvReader.readNext()) != null) {
                 for (String cell : nextRecord) {
                     s = cell.split(";");

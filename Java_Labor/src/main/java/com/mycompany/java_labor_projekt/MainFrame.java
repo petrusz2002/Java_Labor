@@ -47,7 +47,7 @@ public class MainFrame extends javax.swing.JFrame {
         table = new javax.swing.JTable();
         bttn_import = new javax.swing.JButton();
         bttn_export = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
+        bttn_Close = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Java_Labor_Projekt");
@@ -111,10 +111,10 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
-        jButton1.setText("jButton1");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        bttn_Close.setText("Close");
+        bttn_Close.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                bttn_CloseActionPerformed(evt);
             }
         });
 
@@ -138,7 +138,7 @@ public class MainFrame extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(bttn_delete, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
                             .addComponent(bttn_save, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton1))))
+                            .addComponent(bttn_Close, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -152,8 +152,8 @@ public class MainFrame extends javax.swing.JFrame {
                         .addComponent(bttn_save, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bttn_delete, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jButton1))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(bttn_Close))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(36, 36, 36)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -261,9 +261,9 @@ public class MainFrame extends javax.swing.JFrame {
         //Keresés a táblában a bekért szöveg alapján
     }//GEN-LAST:event_bttn_findActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void bttn_CloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_CloseActionPerformed
         close();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_bttn_CloseActionPerformed
 
     /**
      * @param args the command line arguments
@@ -306,12 +306,12 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bttn_Close;
     private javax.swing.JButton bttn_delete;
     private javax.swing.JButton bttn_export;
     private javax.swing.JButton bttn_find;
     private javax.swing.JButton bttn_import;
     private javax.swing.JButton bttn_save;
-    private javax.swing.JButton jButton1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable table;
     private javax.swing.JTextField txt_input;

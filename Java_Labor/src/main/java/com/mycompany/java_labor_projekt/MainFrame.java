@@ -25,6 +25,9 @@ public class MainFrame extends javax.swing.JFrame {
      * Creates new form MainFrame
      */
     public ArrayList<String> l = new ArrayList<String>();
+    private String jdbcURL = "jdbc:mysql://localhost:3306/shop_database";
+    private String username = "root";
+    private String password = "admin";
     public MainFrame() {
         initComponents();
         
@@ -187,18 +190,25 @@ public class MainFrame extends javax.swing.JFrame {
         Frame f = new Frame();
         FileDialog openf = new FileDialog(f, "Choose a file");
         openf.setVisible(true);
-        String[] s;
+        String[] s = new String[2];
         String[] nextRecord;
         DefaultTableModel dt = (DefaultTableModel) table.getModel();
-         try {
+         try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)){
+            
             InputStream fr = new FileInputStream(openf.getDirectory()+"/"+openf.getFile());
             CSVReader csvReader = new CSVReader(new InputStreamReader(fr, "Windows-1250"));
             while ((nextRecord = csvReader.readNext()) != null) {
                 for (String cell : nextRecord) {
                     s = cell.split(";");
                     dt.addRow(s); 
+                    Statement statement = connection.createStatement();
+                    statement.executeUpdate("INSERT INTO Main_table (`First`,`Second`) " + 
+                    "VALUES ('"+s[0]+"','"+s[1]+"')");
+                    
                 }
             }
+            
+            connection.close();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -207,14 +217,12 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void bttn_exportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_exportActionPerformed
         //Ez egy basic export az sql-ból át kell még alakítani a sajátunkra
-        String jdbcURL = "jdbc:mysql://localhost:3306/sales";
-        String username = "root";
-        String password = "password";
+      
          
         String csvFilePath = "Export.csv";
          
         try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-            String sql = "SELECT * FROM review";
+            String sql = "SELECT * FROM main_table";
              
             Statement statement = connection.createStatement();
              

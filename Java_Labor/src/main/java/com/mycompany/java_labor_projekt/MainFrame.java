@@ -14,7 +14,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -25,7 +24,7 @@ public class MainFrame extends javax.swing.JFrame {
      * Creates new form MainFrame
      */
     public ArrayList<String> l = new ArrayList<String>();
-    private String jdbcURL = "jdbc:mysql://localhost:3306/shop_database";
+    private String jdbcURL = "jdbc:mysql://localhost:3306/shop_database?useUnicode=true&character_set_server=utf8";
     private String username = "root";
     private String password = "admin";
     public MainFrame() {
@@ -184,6 +183,7 @@ public class MainFrame extends javax.swing.JFrame {
         table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
     }//GEN-LAST:event_bttn_deleteActionPerformed
 
+    @SuppressWarnings("empty-statement")
     private void bttn_importActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_importActionPerformed
         // Egy két oszlopos és akár végtelen soros csv fájból beimportálja a táblába az adatokat
         
@@ -197,17 +197,24 @@ public class MainFrame extends javax.swing.JFrame {
             
             InputStream fr = new FileInputStream(openf.getDirectory()+"/"+openf.getFile());
             CSVReader csvReader = new CSVReader(new InputStreamReader(fr, "Windows-1250"));
+            Statement statement = connection.createStatement();
             while ((nextRecord = csvReader.readNext()) != null) {
                 for (String cell : nextRecord) {
                     s = cell.split(";");
-                    dt.addRow(s); 
-                    Statement statement = connection.createStatement();
                     statement.executeUpdate("INSERT INTO Main_table (`First`,`Second`) " + 
                     "VALUES ('"+s[0]+"','"+s[1]+"')");
                     
                 }
             }
-            
+            String sql = ("SELECT CONVERT(First USING utf8),CONVERT(Second USING utf8) FROM Main_table;");
+            ResultSet results = statement.executeQuery(sql);
+             while (results.next()) {                 
+                
+                 s[0] = results.getNString(1);
+                 s[1] = results.getNString(2);
+                 dt.addRow(s);
+             }
+          
             connection.close();
         }
         catch (Exception e) {
@@ -217,45 +224,21 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void bttn_exportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_exportActionPerformed
         //Ez egy basic export az sql-ból át kell még alakítani a sajátunkra
-      
-         
         String csvFilePath = "Export.csv";
-         
         try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-            String sql = "SELECT * FROM main_table";
-             
+            String sql = "SELECT * FROM Main_table";
             Statement statement = connection.createStatement();
-             
             ResultSet result = statement.executeQuery(sql);
-             
             BufferedWriter fileWriter = new BufferedWriter(new FileWriter(csvFilePath));
-             
-            // write header line containing column names       
-            fileWriter.write("course_name,student_name,timestamp,rating,comment");
-             
             while (result.next()) {
-                String courseName = result.getString("course_name");
-                String studentName = result.getString("student_name");
-                float rating = result.getFloat("rating");
-                Timestamp timestamp = result.getTimestamp("timestamp");
-                String comment = result.getString("comment");
-                 
-                if (comment == null) {
-                    comment = "";   // write empty value for null
-                } else {
-                    comment = "\"" + comment + "\""; // escape double quotes
-                }
-                 
-                String line = String.format("\"%s\",%s,%.1f,%s,%s",
-                        courseName, studentName, rating, timestamp, comment);
-                 
+                String first = result.getString(1);
+                String second = result.getString(2);
+                String line = String.format(first+";"+second);
                 fileWriter.newLine();
                 fileWriter.write(line);            
             }
-             
             statement.close();
             fileWriter.close();
-             
         } catch (SQLException e) {
             System.out.println("Datababse error:");
             e.printStackTrace();

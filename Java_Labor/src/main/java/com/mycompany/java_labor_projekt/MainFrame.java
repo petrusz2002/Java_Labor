@@ -83,7 +83,7 @@ public class MainFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "elso", "masodik"
+                "First", "Second"
             }
         ) {
             Class[] types = new Class [] {

@@ -9,12 +9,18 @@ import com.opencsv.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -23,7 +29,12 @@ public class MainFrame extends javax.swing.JFrame {
     /**
      * Creates new form MainFrame
      */
-    public ArrayList<String> l = new ArrayList<String>();
+    private DefaultTableModel dt;
+    private String nextcell = "";
+    private String nothing = "";
+    private String[] s = new String[6];
+    private Statement statement;
+    private ResultSet results;
     private String jdbcURL = "jdbc:mysql://localhost:3306/shop_database?useUnicode=true&character_set_server=utf8";
     private String username = "root";
     private String password = "admin";
@@ -41,7 +52,7 @@ public class MainFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        txt_input = new javax.swing.JTextField();
+        txt_find = new javax.swing.JTextField();
         bttn_find = new javax.swing.JButton();
         bttn_save = new javax.swing.JButton();
         bttn_delete = new javax.swing.JButton();
@@ -50,12 +61,18 @@ public class MainFrame extends javax.swing.JFrame {
         bttn_import = new javax.swing.JButton();
         bttn_export = new javax.swing.JButton();
         bttn_Close = new javax.swing.JButton();
+        bttn_AddRow = new javax.swing.JButton();
+        bttn_Current_Database = new javax.swing.JButton();
+        txt_input = new javax.swing.JTextField();
+        lbl_Info = new javax.swing.JLabel();
+        bttn_DeleteRow = new javax.swing.JButton();
+        bttn_ResultOfShopping = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Java_Labor_Projekt");
 
-        txt_input.setText("Search");
-        txt_input.setName(""); // NOI18N
+        txt_find.setText("Search");
+        txt_find.setName(""); // NOI18N
 
         bttn_find.setText("Find");
         bttn_find.addActionListener(new java.awt.event.ActionListener() {
@@ -71,7 +88,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
-        bttn_delete.setText("Delete");
+        bttn_delete.setText("Delete Selected Data");
         bttn_delete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 bttn_deleteActionPerformed(evt);
@@ -83,15 +100,22 @@ public class MainFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "First", "Second"
+                "What you want buy", "How much", "What the shop sells", "How much the Shop has", "Did you manage to buy it?", "How much could you buy"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                true, true, true, true, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
         table.setColumnSelectionAllowed(true);
@@ -106,7 +130,8 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
-        bttn_export.setText("Export From File");
+        bttn_export.setActionCommand("Export From Database");
+        bttn_export.setLabel("Export From Database");
         bttn_export.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 bttn_exportActionPerformed(evt);
@@ -120,6 +145,39 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
+        bttn_AddRow.setText("Add Row");
+        bttn_AddRow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttn_AddRowActionPerformed(evt);
+            }
+        });
+
+        bttn_Current_Database.setText("Show Current Data");
+        bttn_Current_Database.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttn_Current_DatabaseActionPerformed(evt);
+            }
+        });
+
+        txt_input.setText("Type Here");
+        txt_input.setName(""); // NOI18N
+
+        lbl_Info.setText("Select your Data from table then type in that text box:");
+
+        bttn_DeleteRow.setText("Delete Row");
+        bttn_DeleteRow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttn_DeleteRowActionPerformed(evt);
+            }
+        });
+
+        bttn_ResultOfShopping.setText("Show result of your shopping");
+        bttn_ResultOfShopping.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttn_ResultOfShoppingActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -127,94 +185,196 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(bttn_export, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(bttn_Close, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(txt_input, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(1, 1, 1)
-                                .addComponent(bttn_find))
-                            .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(bttn_export, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 37, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(bttn_delete, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
-                            .addComponent(bttn_save, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(bttn_Close, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap())
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(txt_find)
+                                            .addComponent(txt_input)
+                                            .addComponent(lbl_Info, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(bttn_save, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(bttn_find, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(bttn_Current_Database, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(bttn_delete))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 98, Short.MAX_VALUE)
+                                        .addComponent(bttn_ResultOfShopping, javax.swing.GroupLayout.PREFERRED_SIZE, 246, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(10, 10, 10)))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(bttn_AddRow, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(bttn_DeleteRow, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(21, 21, 21)
-                        .addComponent(bttn_save, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(bttn_AddRow, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txt_find))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bttn_delete, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bttn_Close))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(lbl_Info)
+                                .addGap(3, 3, 3)
+                                .addComponent(txt_input, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(bttn_export, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(bttn_DeleteRow, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(bttn_Close, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(36, 36, 36)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txt_input, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(bttn_find, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bttn_import, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bttn_export, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(30, Short.MAX_VALUE))
+                        .addComponent(bttn_ResultOfShopping, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(bttn_Current_Database, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(bttn_delete, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(bttn_find, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(bttn_save, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(128, 128, 128))))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void bttn_saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_saveActionPerformed
-        //Az adott cellában állva tud adatot módosítani/hozzáadni a táblába
+        // A kiválasztot cellában állva tud adatot módosítani/hozzáadni a táblába és az adatbázisba
+        String before = "";
+        System.out.println(txt_input.getText());
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            int index = (int)table.getSelectedColumn();
+            before = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+            statement = connection.createStatement();
+            table.setValueAt(table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()), table.getSelectedRow(), table.getSelectedColumn());
+            if ( index == 0) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items = '"+txt_input.getText()+"' WHERE List_Items LIKE '"+before+"' AND List_Items_DB LIKE '"+nextcell+"' ;");
+            }else if (index == 1){
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items_DB = '"+txt_input.getText()+"' WHERE List_Items_DB LIKE '"+before+"' AND List_Items LIKE '"+nextcell+"' ;");
+            } else if(index == 2){
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items = '"+txt_input.getText()+"' WHERE Shop_Items LIKE '"+before+"' AND Shop_Items_DB LIKE '"+nextcell+"' ;");
+            }else if(index == 3){
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items_DB = '"+txt_input.getText()+"' WHERE Shop_Items_DB LIKE '"+before+"' AND Shop_Items LIKE '"+nextcell+"' ;");
+            }else
+            {
+                JOptionPane.showMessageDialog(null, "You cannot change the value there!", 
+                        "InfoBox: " + "Disabled Action", JOptionPane.INFORMATION_MESSAGE);
+            }
+            statement.close();
+            connection.close();
+        } catch (ArrayIndexOutOfBoundsException boundsException) {
+            JOptionPane.showMessageDialog(null, "Please click , 'Show Current Data' button, before trying to change the value!", "InfoBox: "
+                    + "Wrong Usages", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         
-        table.setValueAt(table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()), table.getSelectedRow(), table.getSelectedColumn());
     }//GEN-LAST:event_bttn_saveActionPerformed
 
     private void bttn_deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_deleteActionPerformed
-        //Az adott cellában állva tud adatot törölni a táblából
+        // Törli az aktuális cellában lévő adatokat a táblából és az adatbázisból
+        String actual = "";
+        int index = table.getSelectedColumn();
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+           statement = connection.createStatement();
+            actual = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+            if (index == 0) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items = '"+nothing+"' WHERE List_Items Like '"+actual
+                        +"' AND List_Items_DB LIKE '"+nextcell+"' ;");
+                table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
+            }else if (index == 1){
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items_DB = '"+nothing+"' WHERE List_Items_DB Like '"+actual
+                        +"' AND List_Items LIKE '"+nextcell+"' ;");
+                table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
+            } else if(index == 2){
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items = '"+nothing+"' WHERE Shop_Items Like '"+actual
+                        +"' AND Shop_Items_DB LIKE '"+nextcell+"' ;");
+                table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
+            }else if(index == 3){
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items_DB = '"+nothing+"' WHERE Shop_Items_DB Like '"+actual
+                        +"' AND Shop_Items LIKE '"+nextcell+"' ;");
+                table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
+            }else{
+                JOptionPane.showMessageDialog(null, "You cannot delete the value there!", 
+                        "InfoBox: " + "Disabled Action", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+            statement.close();
+            connection.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         
-        table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
     }//GEN-LAST:event_bttn_deleteActionPerformed
 
     @SuppressWarnings("empty-statement")
     private void bttn_importActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_importActionPerformed
-        // Egy két oszlopos és akár végtelen soros csv fájból beimportálja a táblába az adatokat
-        
+        // Egy két oszlopos és akár végtelen soros csv fájból beimportálja a táblába és az adatbázisba az adatokat
         Frame f = new Frame();
         FileDialog openf = new FileDialog(f, "Choose a file");
         openf.setVisible(true);
-        String[] s = new String[2];
         String[] nextRecord;
-        DefaultTableModel dt = (DefaultTableModel) table.getModel();
+        dt = (DefaultTableModel) table.getModel();
          try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)){
-            
             InputStream fr = new FileInputStream(openf.getDirectory()+"/"+openf.getFile());
             CSVReader csvReader = new CSVReader(new InputStreamReader(fr, "Windows-1250"));
-            Statement statement = connection.createStatement();
+            statement = connection.createStatement();
             while ((nextRecord = csvReader.readNext()) != null) {
                 for (String cell : nextRecord) {
                     s = cell.split(";");
-                    statement.executeUpdate("INSERT INTO Main_table (`First`,`Second`) " + 
-                    "VALUES ('"+s[0]+"','"+s[1]+"')");
-                    
+                    /*statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`) " + 
+                    "VALUES ('"+s[0]+"','"+s[1]+"')");*/
+                    statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`,`Shop_Items`,`Shop_Items_DB`) " + 
+                    "VALUES ('"+s[0]+"','"+s[1]+"','"+s[2]+"','"+s[3]+"')");
                 }
             }
-            String sql = ("SELECT CONVERT(First USING utf8),CONVERT(Second USING utf8) FROM Main_table;");
-            ResultSet results = statement.executeQuery(sql);
-             while (results.next()) {                 
-                
-                 s[0] = results.getNString(1);
-                 s[1] = results.getNString(2);
+            String sql = ("SELECT CONVERT(List_Items USING utf8),"
+                    + "CONVERT(List_Items_DB USING utf8)"
+                    + ",CONVERT(Shop_Items USING utf8),"
+                    + "CONVERT(Shop_Items_DB USING utf8)"
+                    + ",CONVERT(Succeeded_buy USING utf8),"
+                    + "CONVERT(How_much USING utf8) FROM Main_table;");
+            results = statement.executeQuery(sql);
+            while (results.next()) {    
+                for (int i = 0; i < s.length; ++i) {
+                     s[i] = results.getNString(i+1);
+                }
                  dt.addRow(s);
              }
-          
+            statement.close();
             connection.close();
         }
         catch (Exception e) {
@@ -223,22 +383,31 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_bttn_importActionPerformed
 
     private void bttn_exportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_exportActionPerformed
-        //Ez egy basic export az sql-ból át kell még alakítani a sajátunkra
+        // Ez egy basic export az sql-ból át kell még alakítani a sajátunkra
         String csvFilePath = "Export.csv";
+        s = new String[7];
+        String line;
         try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
             String sql = "SELECT * FROM Main_table";
-            Statement statement = connection.createStatement();
-            ResultSet result = statement.executeQuery(sql);
+            statement = connection.createStatement();
+            results = statement.executeQuery(sql);
             BufferedWriter fileWriter = new BufferedWriter(new FileWriter(csvFilePath));
-            while (result.next()) {
-                String first = result.getString(1);
-                String second = result.getString(2);
-                String line = String.format(first+";"+second);
-                fileWriter.newLine();
+            while (results.next()) {
+                line = "";
+                s[0] = results.getInt(1)+"";
+                s[1] = results.getString(2);
+                s[2] = results.getString(3);
+                s[3] = results.getString(4);
+                s[4] = results.getString(5);
+                s[5] = results.getString(6);
+                s[6] = results.getString(7);
+                line = String.format(s[0]+";"+s[1]+";"+s[2]+";"+s[3]+";"+s[4]+";"+s[5]+";"+s[6]);    
                 fileWriter.write(line);            
+                fileWriter.newLine();
             }
             statement.close();
             fileWriter.close();
+            connection.close();
         } catch (SQLException e) {
             System.out.println("Datababse error:");
             e.printStackTrace();
@@ -249,12 +418,157 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_bttn_exportActionPerformed
 
     private void bttn_findActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_findActionPerformed
-        //Keresés a táblában a bekért szöveg alapján
+        // Keresés az adatbázisban és megjeleníteni a tbálában 
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            dt = (DefaultTableModel) table.getModel();
+            dt.setRowCount(0);
+            statement = connection.createStatement();
+            String sql = ("SELECT CONVERT(List_Items USING utf8)"
+                    + ",CONVERT(List_Items_DB USING utf8)"
+                    + ",CONVERT(Shop_Items USING utf8)"
+                    + ",CONVERT(Shop_Items_DB USING utf8)"
+                    + ",CONVERT(Succeeded_buy USING utf8)"
+                    + ",CONVERT(How_much USING utf8) "
+                    + "FROM Main_table "
+                    + "WHERE List_Items_DB LIKE '"+txt_find.getText()+"' "
+                    + "OR List_Items LIKE '"+txt_find.getText()+"' "
+                    + "OR Shop_Items LIKE '"+txt_find.getText()+"' "
+                    + "OR Shop_Items_DB LIKE '"+txt_find.getText()+"'");
+            results = statement.executeQuery(sql);
+            while (results.next()) {                 
+                for (int i = 0; i < s.length; ++i) {
+                    s[i] = results.getNString(i+1);
+                }
+                dt.addRow(s);
+             }
+            statement.close();
+            connection.close();
+         }catch(Exception e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_bttn_findActionPerformed
 
     private void bttn_CloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_CloseActionPerformed
-        close();
+        // Bezárja az alkalmazást
+        WindowEvent closeWindow = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
+        Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(closeWindow);
     }//GEN-LAST:event_bttn_CloseActionPerformed
+
+    private void bttn_AddRowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_AddRowActionPerformed
+       // Hozzáad a táblához egy sort és az adatbázishoz
+       s = new String[7];
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+           statement = connection.createStatement();
+           statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`,`Shop_Items`,`Shop_Items_DB`,`Succeeded_buy`,`How_much`) " + 
+                    "VALUES ('"+nothing+"','"+nothing+"','"+nothing+"','"+nothing+"','"+nothing+"','"+nothing+"')");
+           dt = (DefaultTableModel) table.getModel();
+           dt.addRow(s);
+           statement.close();
+           connection.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_bttn_AddRowActionPerformed
+
+    private void bttn_Current_DatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_Current_DatabaseActionPerformed
+        // Megmutatja az aktuális adatokat az adatbázsban
+        dt = (DefaultTableModel) table.getModel();
+        dt.setRowCount(0);
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            String sql = ("SELECT CONVERT(List_Items USING utf8)"
+                    + ",CONVERT(List_Items_DB USING utf8),"
+                    + "CONVERT(Shop_Items USING utf8)"
+                    + ",CONVERT(Shop_Items_DB USING utf8)"
+                    + ",CONVERT(Succeeded_buy USING utf8)"
+                    + ",CONVERT(How_much USING utf8) FROM Main_table;");
+            statement = connection.createStatement();
+            results = statement.executeQuery(sql);
+            while (results.next()) { 
+                for (int i = 0; i < s.length; ++i) {
+                    s[i] = results.getNString(i+1);
+                }
+                dt.addRow(s);
+             }
+             statement.close();
+             connection.close();
+         }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_bttn_Current_DatabaseActionPerformed
+
+    private void bttn_DeleteRowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_DeleteRowActionPerformed
+        // Sor törlése táblából és adatbázisból
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            int index  = table.getSelectedRow()+1;
+            int[] rows = new int[table.getRowCount()];
+            int i = 0;
+            String sql = "Select shop_database.main_table.Rows from shop_database.Main_table;";
+            statement = connection.createStatement();
+            results = statement.executeQuery(sql);
+            while (results.next()) { 
+                rows[i] = results.getInt(1);
+            }
+            for (int j = 0; j < rows.length; j++) {
+                if (rows[j] == index) {
+                    sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows = CAST("+index+" AS DECIMAL) ;");
+                    break;
+                }else if (rows[j] > index) {
+                    sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows > CAST("+index+" AS DECIMAL) ORDER BY ASC LIMIT 1 ;");
+                    break;
+                }
+            }
+            statement = connection.createStatement();
+            statement.execute(sql);
+            dt.removeRow(table.getSelectedRow());
+            statement.close();
+            connection.close();
+         }catch (ArrayIndexOutOfBoundsException boundsException) {
+            JOptionPane.showMessageDialog(null, "Please choose your row, before usage!", "InfoBox: "
+                    + "Wrong Usages", JOptionPane.INFORMATION_MESSAGE);
+         }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_bttn_DeleteRowActionPerformed
+
+    private void bttn_ResultOfShoppingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_ResultOfShoppingActionPerformed
+        //Meg mondja mit sikerült megvásárolni a listából és ha nem,is sikerül megmondja mennyit sikerült + beírja adatbázisba is
+        int indexRow = 0;
+        int indexColumn = 0;
+        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            String[][] matrix_data =new String[table.getRowCount()][table.getColumnCount()];
+            dt = (DefaultTableModel) table.getModel();
+            dt.setRowCount(0);
+            statement = connection.createStatement();
+            String sql = ("SELECT CONVERT(List_Items USING utf8)"
+                    + ",CONVERT(List_Items_DB USING utf8)"
+                    + ",CONVERT(Shop_Items USING utf8)"
+                    + ",CONVERT(Shop_Items_DB USING utf8)"
+                    + ",CONVERT(Succeeded_buy USING utf8) "
+                    + ",CONVERT(How_much USING utf8)"
+                    + "FROM Main_table ;");
+            results = statement.executeQuery(sql);
+            while (results.next()) {                 
+                for (indexColumn = 1; indexColumn < 5; ++indexColumn) {
+                    matrix_data[indexRow][indexColumn] = results.getNString(indexColumn+1);
+                }
+                ++indexRow;
+                /*
+                for (int i = 0; i < s.length; i++) {
+                    s[i] = results.getNString(i+1);
+                }
+                dt.addRow(s);*/
+            }
+            
+            statement.close();
+            connection.close();
+         } catch (ArrayIndexOutOfBoundsException boundsException) {
+            JOptionPane.showMessageDialog(null, "Please first import your data or Click 'Show Current Data' button, before trying to get the result!", "InfoBox: "
+                    + "Wrong Usages", JOptionPane.INFORMATION_MESSAGE);
+         }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_bttn_ResultOfShoppingActionPerformed
 
     /**
      * @param args the command line arguments
@@ -290,21 +604,22 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
     }
-    public void close()
-    {
-        WindowEvent closeWindow = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
-        Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(closeWindow);
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bttn_AddRow;
     private javax.swing.JButton bttn_Close;
+    private javax.swing.JButton bttn_Current_Database;
+    private javax.swing.JButton bttn_DeleteRow;
+    private javax.swing.JButton bttn_ResultOfShopping;
     private javax.swing.JButton bttn_delete;
     private javax.swing.JButton bttn_export;
     private javax.swing.JButton bttn_find;
     private javax.swing.JButton bttn_import;
     private javax.swing.JButton bttn_save;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lbl_Info;
     private javax.swing.JTable table;
+    private javax.swing.JTextField txt_find;
     private javax.swing.JTextField txt_input;
     // End of variables declaration//GEN-END:variables
 }

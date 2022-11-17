@@ -4,25 +4,18 @@
  */
 package com.mycompany.java_labor_projekt;
 
-
 import com.opencsv.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
-
 
 public class MainFrame extends javax.swing.JFrame {
 
@@ -31,16 +24,17 @@ public class MainFrame extends javax.swing.JFrame {
      */
     private DefaultTableModel dt;
     private String nextcell = "";
-    private String nothing = "";
+    private final String nothing = "";
     private String[] s = new String[6];
     private Statement statement;
     private ResultSet results;
-    private String jdbcURL = "jdbc:mysql://localhost:3306/shop_database?useUnicode=true&character_set_server=utf8";
-    private String username = "root";
-    private String password = "admin";
+    private final String jdbcURL = "jdbc:mysql://localhost:3306/shop_database?useUnicode=true&character_set_server=utf8";
+    private final String username = "root";
+    private final String password = "admin";
+
     public MainFrame() {
         initComponents();
-        
+
     }
 
     /**
@@ -266,27 +260,33 @@ public class MainFrame extends javax.swing.JFrame {
     private void bttn_saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_saveActionPerformed
         // A kiválasztot cellában állva tud adatot módosítani/hozzáadni a táblába és az adatbázisba
         String before = "";
-        System.out.println(txt_input.getText());
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-            int index = (int)table.getSelectedColumn();
-            before = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            int index = (int) table.getSelectedColumn();
+            if (table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()) == null) {
+                before = "";
+            } else {
+                before = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+            }
             statement = connection.createStatement();
             table.setValueAt(table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()), table.getSelectedRow(), table.getSelectedColumn());
-            if ( index == 0) {
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
-                statement.executeUpdate("UPDATE Main_table SET List_Items = '"+txt_input.getText()+"' WHERE List_Items LIKE '"+before+"' AND List_Items_DB LIKE '"+nextcell+"' ;");
-            }else if (index == 1){
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
-                statement.executeUpdate("UPDATE Main_table SET List_Items_DB = '"+txt_input.getText()+"' WHERE List_Items_DB LIKE '"+before+"' AND List_Items LIKE '"+nextcell+"' ;");
-            } else if(index == 2){
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
-                statement.executeUpdate("UPDATE Main_table SET Shop_Items = '"+txt_input.getText()+"' WHERE Shop_Items LIKE '"+before+"' AND Shop_Items_DB LIKE '"+nextcell+"' ;");
-            }else if(index == 3){
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
-                statement.executeUpdate("UPDATE Main_table SET Shop_Items_DB = '"+txt_input.getText()+"' WHERE Shop_Items_DB LIKE '"+before+"' AND Shop_Items LIKE '"+nextcell+"' ;");
-            }else
-            {
-                JOptionPane.showMessageDialog(null, "You cannot change the value there!", 
+            if (index == 0) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() + 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items = '" + txt_input.getText() + "' WHERE List_Items LIKE '" + before + "' AND List_Items_DB LIKE '" + nextcell + "' "
+                        + "ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
+            } else if (index == 1) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() - 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items_DB = '" + txt_input.getText() + "' WHERE List_Items_DB LIKE '" + before + "' AND List_Items LIKE '" + nextcell + "' "
+                        + "ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
+            } else if (index == 2) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() + 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items = '" + txt_input.getText() + "' WHERE Shop_Items LIKE '" + before + "' AND Shop_Items_DB LIKE '" + nextcell + "' "
+                        + "ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
+            } else if (index == 3) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() - 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items_DB = '" + txt_input.getText() + "' WHERE Shop_Items_DB LIKE '" + before + "' AND Shop_Items LIKE '" + nextcell + "' "
+                        + "ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
+            } else {
+                JOptionPane.showMessageDialog(null, "You cannot change the value there!",
                         "InfoBox: " + "Disabled Action", JOptionPane.INFORMATION_MESSAGE);
             }
             statement.close();
@@ -297,50 +297,51 @@ public class MainFrame extends javax.swing.JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
     }//GEN-LAST:event_bttn_saveActionPerformed
 
     private void bttn_deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_deleteActionPerformed
         // Törli az aktuális cellában lévő adatokat a táblából és az adatbázisból
         String actual = "";
         int index = table.getSelectedColumn();
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-           statement = connection.createStatement();
-            actual = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            statement = connection.createStatement();
+            if (table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()) == null) {
+                actual = "";
+            } else {
+                actual = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+            }
             if (index == 0) {
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
-                statement.executeUpdate("UPDATE Main_table SET List_Items = '"+nothing+"' WHERE List_Items Like '"+actual
-                        +"' AND List_Items_DB LIKE '"+nextcell+"' ;");
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() + 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items = '" + nothing + "' WHERE List_Items Like '" + actual
+                        + "' AND List_Items_DB LIKE '" + nextcell + "' ;");
                 table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
-            }else if (index == 1){
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
-                statement.executeUpdate("UPDATE Main_table SET List_Items_DB = '"+nothing+"' WHERE List_Items_DB Like '"+actual
-                        +"' AND List_Items LIKE '"+nextcell+"' ;");
+            } else if (index == 1) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() - 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET List_Items_DB = '" + nothing + "' WHERE List_Items_DB Like '" + actual
+                        + "' AND List_Items LIKE '" + nextcell + "' ;");
                 table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
-            } else if(index == 2){
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()+1).toString();
-                statement.executeUpdate("UPDATE Main_table SET Shop_Items = '"+nothing+"' WHERE Shop_Items Like '"+actual
-                        +"' AND Shop_Items_DB LIKE '"+nextcell+"' ;");
+            } else if (index == 2) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() + 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items = '" + nothing + "' WHERE Shop_Items Like '" + actual
+                        + "' AND Shop_Items_DB LIKE '" + nextcell + "' ;");
                 table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
-            }else if(index == 3){
-                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()-1).toString();
-                statement.executeUpdate("UPDATE Main_table SET Shop_Items_DB = '"+nothing+"' WHERE Shop_Items_DB Like '"+actual
-                        +"' AND Shop_Items LIKE '"+nextcell+"' ;");
+            } else if (index == 3) {
+                nextcell = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn() - 1).toString();
+                statement.executeUpdate("UPDATE Main_table SET Shop_Items_DB = '" + nothing + "' WHERE Shop_Items_DB Like '" + actual
+                        + "' AND Shop_Items LIKE '" + nextcell + "' ;");
                 table.setValueAt("", table.getSelectedRow(), table.getSelectedColumn());
-            }else{
-                JOptionPane.showMessageDialog(null, "You cannot delete the value there!", 
+            } else {
+                JOptionPane.showMessageDialog(null, "You cannot delete the value there!",
                         "InfoBox: " + "Disabled Action", JOptionPane.INFORMATION_MESSAGE);
             }
-            
+
             statement.close();
             connection.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
     }//GEN-LAST:event_bttn_deleteActionPerformed
-
-    @SuppressWarnings("empty-statement")
     private void bttn_importActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_importActionPerformed
         // Egy két oszlopos és akár végtelen soros csv fájból beimportálja a táblába és az adatbázisba az adatokat
         Frame f = new Frame();
@@ -348,8 +349,8 @@ public class MainFrame extends javax.swing.JFrame {
         openf.setVisible(true);
         String[] nextRecord;
         dt = (DefaultTableModel) table.getModel();
-         try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)){
-            InputStream fr = new FileInputStream(openf.getDirectory()+"/"+openf.getFile());
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            InputStream fr = new FileInputStream(openf.getDirectory() + "/" + openf.getFile());
             CSVReader csvReader = new CSVReader(new InputStreamReader(fr, "Windows-1250"));
             statement = connection.createStatement();
             while ((nextRecord = csvReader.readNext()) != null) {
@@ -357,8 +358,8 @@ public class MainFrame extends javax.swing.JFrame {
                     s = cell.split(";");
                     /*statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`) " + 
                     "VALUES ('"+s[0]+"','"+s[1]+"')");*/
-                    statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`,`Shop_Items`,`Shop_Items_DB`) " + 
-                    "VALUES ('"+s[0]+"','"+s[1]+"','"+s[2]+"','"+s[3]+"')");
+                    statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`,`Shop_Items`,`Shop_Items_DB`) "
+                            + "VALUES ('" + s[0] + "','" + s[1] + "','" + s[2] + "','" + s[3] + "')");
                 }
             }
             String sql = ("SELECT CONVERT(List_Items USING utf8),"
@@ -368,16 +369,15 @@ public class MainFrame extends javax.swing.JFrame {
                     + ",CONVERT(Succeeded_buy USING utf8),"
                     + "CONVERT(How_much USING utf8) FROM Main_table;");
             results = statement.executeQuery(sql);
-            while (results.next()) {    
+            while (results.next()) {
                 for (int i = 0; i < s.length; ++i) {
-                     s[i] = results.getNString(i+1);
+                    s[i] = results.getNString(i + 1);
                 }
-                 dt.addRow(s);
-             }
+                dt.addRow(s);
+            }
             statement.close();
             connection.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }//GEN-LAST:event_bttn_importActionPerformed
@@ -387,22 +387,22 @@ public class MainFrame extends javax.swing.JFrame {
         String csvFilePath = "Export.csv";
         s = new String[7];
         String line;
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
             String sql = "SELECT * FROM Main_table";
             statement = connection.createStatement();
             results = statement.executeQuery(sql);
             BufferedWriter fileWriter = new BufferedWriter(new FileWriter(csvFilePath));
             while (results.next()) {
                 line = "";
-                s[0] = results.getInt(1)+"";
+                s[0] = results.getInt(1) + "";
                 s[1] = results.getString(2);
                 s[2] = results.getString(3);
                 s[3] = results.getString(4);
                 s[4] = results.getString(5);
                 s[5] = results.getString(6);
                 s[6] = results.getString(7);
-                line = String.format(s[0]+";"+s[1]+";"+s[2]+";"+s[3]+";"+s[4]+";"+s[5]+";"+s[6]);    
-                fileWriter.write(line);            
+                line = String.format(s[0] + ";" + s[1] + ";" + s[2] + ";" + s[3] + ";" + s[4] + ";" + s[5] + ";" + s[6]);
+                fileWriter.write(line);
                 fileWriter.newLine();
             }
             statement.close();
@@ -419,7 +419,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void bttn_findActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_findActionPerformed
         // Keresés az adatbázisban és megjeleníteni a tbálában 
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
             dt = (DefaultTableModel) table.getModel();
             dt.setRowCount(0);
             statement = connection.createStatement();
@@ -430,20 +430,20 @@ public class MainFrame extends javax.swing.JFrame {
                     + ",CONVERT(Succeeded_buy USING utf8)"
                     + ",CONVERT(How_much USING utf8) "
                     + "FROM Main_table "
-                    + "WHERE List_Items_DB LIKE '"+txt_find.getText()+"' "
-                    + "OR List_Items LIKE '"+txt_find.getText()+"' "
-                    + "OR Shop_Items LIKE '"+txt_find.getText()+"' "
-                    + "OR Shop_Items_DB LIKE '"+txt_find.getText()+"'");
+                    + "WHERE List_Items_DB LIKE '" + txt_find.getText() + "' "
+                    + "OR List_Items LIKE '" + txt_find.getText() + "' "
+                    + "OR Shop_Items LIKE '" + txt_find.getText() + "' "
+                    + "OR Shop_Items_DB LIKE '" + txt_find.getText() + "'");
             results = statement.executeQuery(sql);
-            while (results.next()) {                 
+            while (results.next()) {
                 for (int i = 0; i < s.length; ++i) {
-                    s[i] = results.getNString(i+1);
+                    s[i] = results.getNString(i + 1);
                 }
                 dt.addRow(s);
-             }
+            }
             statement.close();
             connection.close();
-         }catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }//GEN-LAST:event_bttn_findActionPerformed
@@ -455,16 +455,16 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_bttn_CloseActionPerformed
 
     private void bttn_AddRowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_AddRowActionPerformed
-       // Hozzáad a táblához egy sort és az adatbázishoz
-       s = new String[7];
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-           statement = connection.createStatement();
-           statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`,`Shop_Items`,`Shop_Items_DB`,`Succeeded_buy`,`How_much`) " + 
-                    "VALUES ('"+nothing+"','"+nothing+"','"+nothing+"','"+nothing+"','"+nothing+"','"+nothing+"')");
-           dt = (DefaultTableModel) table.getModel();
-           dt.addRow(s);
-           statement.close();
-           connection.close();
+        // Hozzáad a táblához egy sort és az adatbázishoz
+        s = new String[7];
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            statement = connection.createStatement();
+            statement.executeUpdate("INSERT INTO Main_table (`List_Items`,`List_Items_DB`,`Shop_Items`,`Shop_Items_DB`,`Succeeded_buy`,`How_much`) "
+                    + "VALUES ('" + nothing + "','" + nothing + "','" + nothing + "','" + nothing + "','" + nothing + "','" + nothing + "')");
+            dt = (DefaultTableModel) table.getModel();
+            dt.addRow(s);
+            statement.close();
+            connection.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -474,7 +474,7 @@ public class MainFrame extends javax.swing.JFrame {
         // Megmutatja az aktuális adatokat az adatbázsban
         dt = (DefaultTableModel) table.getModel();
         dt.setRowCount(0);
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
             String sql = ("SELECT CONVERT(List_Items USING utf8)"
                     + ",CONVERT(List_Items_DB USING utf8),"
                     + "CONVERT(Shop_Items USING utf8)"
@@ -483,37 +483,37 @@ public class MainFrame extends javax.swing.JFrame {
                     + ",CONVERT(How_much USING utf8) FROM Main_table;");
             statement = connection.createStatement();
             results = statement.executeQuery(sql);
-            while (results.next()) { 
+            while (results.next()) {
                 for (int i = 0; i < s.length; ++i) {
-                    s[i] = results.getNString(i+1);
+                    s[i] = results.getNString(i + 1);
                 }
                 dt.addRow(s);
-             }
-             statement.close();
-             connection.close();
-         }catch(Exception e) {
+            }
+            statement.close();
+            connection.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }//GEN-LAST:event_bttn_Current_DatabaseActionPerformed
 
     private void bttn_DeleteRowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_DeleteRowActionPerformed
         // Sor törlése táblából és adatbázisból
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-            int index  = table.getSelectedRow()+1;
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
+            int index = table.getSelectedRow() + 1;
             int[] rows = new int[table.getRowCount()];
             int i = 0;
             String sql = "Select shop_database.main_table.Rows from shop_database.Main_table;";
             statement = connection.createStatement();
             results = statement.executeQuery(sql);
-            while (results.next()) { 
+            while (results.next()) {
                 rows[i] = results.getInt(1);
             }
             for (int j = 0; j < rows.length; j++) {
                 if (rows[j] == index) {
-                    sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows = CAST("+index+" AS DECIMAL) ;");
+                    sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows = CAST(" + index + " AS DECIMAL) ;");
                     break;
-                }else if (rows[j] > index) {
-                    sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows > CAST("+index+" AS DECIMAL) ORDER BY ASC LIMIT 1 ;");
+                } else if (rows[j] > index) {
+                    sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows > CAST(" + index + " AS DECIMAL) ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
                     break;
                 }
             }
@@ -522,50 +522,74 @@ public class MainFrame extends javax.swing.JFrame {
             dt.removeRow(table.getSelectedRow());
             statement.close();
             connection.close();
-         }catch (ArrayIndexOutOfBoundsException boundsException) {
+        } catch (ArrayIndexOutOfBoundsException boundsException) {
             JOptionPane.showMessageDialog(null, "Please choose your row, before usage!", "InfoBox: "
                     + "Wrong Usages", JOptionPane.INFORMATION_MESSAGE);
-         }
-        catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }//GEN-LAST:event_bttn_DeleteRowActionPerformed
 
     private void bttn_ResultOfShoppingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttn_ResultOfShoppingActionPerformed
         //Meg mondja mit sikerült megvásárolni a listából és ha nem,is sikerül megmondja mennyit sikerült + beírja adatbázisba is
-        int indexRow = 0;
-        int indexColumn = 0;
-        try (Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
-            String[][] matrix_data =new String[table.getRowCount()][table.getColumnCount()];
-            dt = (DefaultTableModel) table.getModel();
-            dt.setRowCount(0);
+        ArrayList<String> buy_List = new ArrayList<String>();
+        ArrayList<String> shop_List = new ArrayList<String>();
+        ArrayList<String> result_List = new ArrayList<String>();
+        String[] spliStrings_buy = new String[2];
+        String[] spliStrings_shop = new String[2];
+        int rowindex = 0;
+        int listindex = 0;
+        try ( Connection connection = DriverManager.getConnection(jdbcURL, username, password)) {
             statement = connection.createStatement();
             String sql = ("SELECT CONVERT(List_Items USING utf8)"
                     + ",CONVERT(List_Items_DB USING utf8)"
                     + ",CONVERT(Shop_Items USING utf8)"
                     + ",CONVERT(Shop_Items_DB USING utf8)"
-                    + ",CONVERT(Succeeded_buy USING utf8) "
-                    + ",CONVERT(How_much USING utf8)"
                     + "FROM Main_table ;");
             results = statement.executeQuery(sql);
-            while (results.next()) {                 
-                for (indexColumn = 1; indexColumn < 5; ++indexColumn) {
-                    matrix_data[indexRow][indexColumn] = results.getNString(indexColumn+1);
-                }
-                ++indexRow;
-                /*
-                for (int i = 0; i < s.length; i++) {
-                    s[i] = results.getNString(i+1);
-                }
-                dt.addRow(s);*/
+            while (results.next()) {
+                buy_List.add(results.getNString(1) + ";" + results.getNString(2));
+                shop_List.add(results.getNString(3) + ";" + results.getNString(4));
             }
-            
+            for (String buyString : buy_List) {
+                if (buyString.equals(";")) {
+                    spliStrings_buy[0] = "";
+                    spliStrings_buy[1] = "0";
+                } else {
+                    spliStrings_buy = buyString.split(";");
+                }
+                for (String shopString : shop_List) {
+                    if (shopString.equals(";")) {
+                        spliStrings_shop[0] = "";
+                        spliStrings_shop[1] = "0";
+                    } else {
+                        spliStrings_shop = shopString.split(";");
+                    }
+                    if (spliStrings_buy[0].equals(spliStrings_shop[0])) {
+                        if (Integer.parseInt(spliStrings_buy[1]) <= Integer.parseInt(spliStrings_shop[1])) {
+                            result_List.add("YES;" + spliStrings_buy[1]);
+                            table.setValueAt("YES", rowindex, 4);
+                            table.setValueAt(spliStrings_buy[1], rowindex, 5);
+                            statement.executeUpdate("UPDATE Main_table SET Succeeded_buy = 'YES',How_much = '" + spliStrings_buy[1] + "' WHERE List_items LIKE '" + spliStrings_buy[0] + "'"
+                                    + "ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
+                        } else if (Integer.parseInt(spliStrings_buy[1]) > Integer.parseInt(spliStrings_shop[1])) {
+                            result_List.add("NO;" + spliStrings_shop[1]);
+                            table.setValueAt("NO", rowindex, 4);
+                            table.setValueAt(spliStrings_shop[1], rowindex, 5);
+                            statement.executeUpdate("UPDATE Main_table SET Succeeded_buy = 'NO',How_much = '" + spliStrings_shop[1] + "' WHERE List_items LIKE '" + spliStrings_buy[0] + "'"
+                                    + "ORDER BY shop_database.main_table.Rows ASC LIMIT 1 ;");
+
+                        }
+                        ++rowindex;
+                    }
+                }
+            }
             statement.close();
             connection.close();
-         } catch (ArrayIndexOutOfBoundsException boundsException) {
+        } catch (ArrayIndexOutOfBoundsException boundsException) {
             JOptionPane.showMessageDialog(null, "Please first import your data or Click 'Show Current Data' button, before trying to get the result!", "InfoBox: "
                     + "Wrong Usages", JOptionPane.INFORMATION_MESSAGE);
-         }catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }//GEN-LAST:event_bttn_ResultOfShoppingActionPerformed

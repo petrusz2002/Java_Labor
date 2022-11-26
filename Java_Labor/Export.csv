@@ -1,9 +1,9 @@
-1;apple;1;apple;1;null;null
-2;banana;2;banana;2;null;null
-3;lemon;7;lemon;3;null;null
-4;strawberry;3;strawberry;4;null;null
-5;blueberry;6;blueberry;5;null;null
-6;;;milk;6;null;null
+1;apple;1;apple;1;YES;1
+2;banana;2;banana;2;YES;2
+3;lemon;7;lemon;3;NO;3
+4;strawberry;3;strawberry;4;YES;3
+5;blueberry;6;blueberry;5;NO;5
+6;;;milk;6;YES;0
 7;;;bread;7;null;null
 8;;;butter;8;null;null
 9;;;salad;9;null;null

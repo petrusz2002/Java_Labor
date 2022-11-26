@@ -1,0 +1,23 @@
+@startuml
+annotation java.lang.SuppressWarnings
+class com.mycompany.java_labor_projekt.MainFrame
+class java.awt.event.WindowEvent
+class java.sql.Connection
+class java.sql.DriverManager
+class java.sql.ResultSet
+class java.sql.SQLException
+class java.sql.Statement
+class javax.swing.JFrame
+class javax.swing.JOptionPane
+class javax.swing.table.DefaultTableModel
+com.mycompany.java_labor_projekt.MainFrame ..> java.lang.SuppressWarnings
+com.mycompany.java_labor_projekt.MainFrame ..> java.awt.event.WindowEvent
+com.mycompany.java_labor_projekt.MainFrame ..> java.sql.Connection
+com.mycompany.java_labor_projekt.MainFrame ..> java.sql.DriverManager
+com.mycompany.java_labor_projekt.MainFrame ..> java.sql.ResultSet
+com.mycompany.java_labor_projekt.MainFrame ..> java.sql.SQLException
+com.mycompany.java_labor_projekt.MainFrame ..> java.sql.Statement
+com.mycompany.java_labor_projekt.MainFrame --|> javax.swing.JFrame
+com.mycompany.java_labor_projekt.MainFrame ..> javax.swing.JOptionPane
+com.mycompany.java_labor_projekt.MainFrame ..> javax.swing.table.DefaultTableModel
+@enduml

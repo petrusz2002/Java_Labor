@@ -508,7 +508,7 @@ public class MainFrame extends javax.swing.JFrame {
             while (results.next()) {
                 rows[i] = results.getInt(1);
             }
-            for (int j = 0; j < rows.length; j++) {
+            for (int j = 0; j < rows.length; ++j) {
                 if (rows[j] == index) {
                     sql = ("DELETE FROM shop_database.Main_table WHERE shop_database.main_table.Rows = CAST(" + index + " AS DECIMAL) ;");
                     break;
